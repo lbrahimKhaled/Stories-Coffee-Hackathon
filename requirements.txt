@@ -1,5 +1,7 @@
-pandas
-re
-numpy
-seaborn
 matplotlib
+numpy
+pandas
+plotly
+scikit-learn
+scipy
+seaborn
