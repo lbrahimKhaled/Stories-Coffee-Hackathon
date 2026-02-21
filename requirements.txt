@@ -2,6 +2,7 @@ matplotlib
 numpy
 pandas
 plotly
+dash
 scikit-learn
 scipy
 seaborn
