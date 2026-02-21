@@ -72,4 +72,3 @@ plt.tight_layout()
 plt.show()
 df_growth = df_norm.pct_change(axis=1)
 
-
