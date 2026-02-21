@@ -143,7 +143,7 @@ def run_cli():
     parser.add_argument("--top-n", type=int, default=10, help="How many branch recommendations to print")
     parser.add_argument(
         "--save-path",
-        default="datasets/toters_rollout_recommendations.csv",
+        default="datasets/outputs/toters_rollout/toters_rollout_recommendations.csv",
         help="CSV path for recommendations output",
     )
     args = parser.parse_args()
@@ -159,9 +159,11 @@ def run_cli():
     print(recommendations.to_string(index=False))
 
     if args.save_path:
-        recommendations.to_csv(args.save_path, index=False)
+        save_path = Path(args.save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        recommendations.to_csv(save_path, index=False)
         print()
-        print(f"Saved recommendations to: {args.save_path}")
+        print(f"Saved recommendations to: {save_path}")
 
 
 if __name__ == "__main__":
