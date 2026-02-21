@@ -173,16 +173,18 @@ def apply_plot_theme(fig: go.Figure) -> go.Figure:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(255,255,255,0.82)",
         font=dict(family="'Sora', 'Avenir Next', sans-serif", color="#2E241A"),
-        margin=dict(l=44, r=96, t=62, b=68),
+        margin=dict(l=56, r=46, t=70, b=72),
         legend=dict(
             title="",
             orientation="v",
             yanchor="top",
-            y=1.0,
-            xanchor="left",
-            x=1.02,
-            font=dict(size=11),
-            bgcolor="rgba(255,255,255,0.4)",
+            y=0.99,
+            xanchor="right",
+            x=0.99,
+            font=dict(size=10),
+            bgcolor="rgba(255,255,255,0.58)",
+            bordercolor="rgba(123,94,66,0.20)",
+            borderwidth=1,
         ),
         hoverlabel=dict(font_size=12),
     )
@@ -193,6 +195,7 @@ def apply_plot_theme(fig: go.Figure) -> go.Figure:
 
 def build_scatter_figure(assignments_branch: pd.DataFrame) -> go.Figure:
     scatter_df = assignments_branch.copy()
+    scatter_df = scatter_df.sort_values("Qty", ascending=False)
     scatter_df["TierColor"] = scatter_df["SuccessTier"].map(tier_color)
     tier_order = (
         scatter_df[["SuccessTier", "SuccessRank"]].drop_duplicates().sort_values("SuccessRank")["SuccessTier"].tolist()
@@ -219,11 +222,11 @@ def build_scatter_figure(assignments_branch: pd.DataFrame) -> go.Figure:
             "SuccessTier": False,
         },
         title="Product Performance Map",
-        size_max=24,
+        size_max=16,
         category_orders={"SuccessTier": tier_order},
     )
-    fig.update_traces(marker=dict(line=dict(width=1, color="rgba(255,255,255,0.35)"), opacity=0.82))
-    fig.update_layout(xaxis_title="Sales", yaxis_title="Profit")
+    fig.update_traces(marker=dict(line=dict(width=0.7, color="rgba(255,255,255,0.42)"), opacity=0.58))
+    fig.update_layout(xaxis_title="Sales", yaxis_title="Profit", legend_title_text="Success Tier")
     return apply_plot_theme(fig)
 
 
@@ -270,10 +273,10 @@ def build_cluster_mix_figure(profiles_branch: pd.DataFrame) -> go.Figure:
         ),
         secondary_y=True,
     )
-    fig.update_layout(title="Cluster Tier Mix")
-    fig.update_xaxes(title_text="Success Tier", tickangle=0)
-    fig.update_yaxes(title_text="Sales/Profit Share", tickformat=".0%", secondary_y=False)
-    fig.update_yaxes(title_text="Products", secondary_y=True)
+    fig.update_layout(title="Channel Mix by Cluster Tier", bargap=0.26)
+    fig.update_xaxes(title_text="Success Tier", tickangle=-18, tickfont=dict(size=11))
+    fig.update_yaxes(title_text="Sales/Profit Share", tickformat=".0%", secondary_y=False, tickfont=dict(size=11))
+    fig.update_yaxes(title_text="Products", secondary_y=True, tickfont=dict(size=11))
     return apply_plot_theme(fig)
 
 
@@ -296,11 +299,17 @@ def build_channel_heatmap(profiles_branch: pd.DataFrame) -> go.Figure:
             zmin=0,
             zmax=1,
             colorbar=dict(title="Share", tickformat=".0%"),
+            text=[[format_pct(v) for v in row] for row in matrix],
+            texttemplate="%{text}",
+            textfont=dict(size=11, color="#2E241A"),
+            xgap=4,
+            ygap=4,
             hovertemplate="%{y}<br>%{x}: %{z:.1%}<extra></extra>",
         )
     )
     fig.update_layout(title="Channel Dominance by Tier", xaxis_title="", yaxis_title="")
-    fig.update_xaxes(tickangle=0)
+    fig.update_xaxes(tickangle=0, tickfont=dict(size=12))
+    fig.update_yaxes(tickfont=dict(size=12), automargin=True)
     return apply_plot_theme(fig)
 
 
@@ -357,7 +366,12 @@ def build_k_quality_figure(k_branch: pd.DataFrame) -> go.Figure:
 
 
 def build_top_products_bar(assignments_branch: pd.DataFrame, count: int = 12) -> go.Figure:
-    top_df = assignments_branch.sort_values("Sales", ascending=False).head(count).copy()
+    if assignments_branch.empty:
+        top_df = assignments_branch.copy()
+    else:
+        top_rank = int(assignments_branch["SuccessRank"].min())
+        top_df = assignments_branch[assignments_branch["SuccessRank"] == top_rank].copy()
+    top_df = top_df.sort_values("Sales", ascending=False).head(count).copy()
     top_df = top_df.sort_values("Sales", ascending=True)
 
     fig = px.bar(
@@ -374,7 +388,7 @@ def build_top_products_bar(assignments_branch: pd.DataFrame, count: int = 12) ->
             "Cluster": True,
             "SuccessTier": False,
         },
-        title="Top Revenue Products",
+        title="Top Tier Products by Sales",
     )
     fig.update_layout(yaxis_title="", xaxis_title="Sales")
     return apply_plot_theme(fig)
@@ -430,11 +444,12 @@ def build_margin_box_figure(assignments_branch: pd.DataFrame) -> go.Figure:
 
 def build_margin_scatter(assignments_branch: pd.DataFrame) -> go.Figure:
     df = assignments_branch.copy()
+    df["SalesForPlot"] = df["Sales"].clip(lower=1)
     color_map = {tier: tier_color(tier) for tier in df["SuccessTier"].drop_duplicates().tolist()}
 
     fig = px.scatter(
         df,
-        x="Sales",
+        x="SalesForPlot",
         y="MarginPct",
         size="Qty",
         color="SuccessTier",
@@ -446,6 +461,7 @@ def build_margin_scatter(assignments_branch: pd.DataFrame) -> go.Figure:
             "MarginPct": ":.1%",
             "Cluster": True,
             "SuccessTier": False,
+            "SalesForPlot": False,
         },
         title="Margin % vs Sales",
         log_x=True,
@@ -468,6 +484,123 @@ def build_margin_histogram(assignments_branch: pd.DataFrame) -> go.Figure:
     )
     fig.update_xaxes(tickformat=".0%", title_text="Margin %")
     fig.update_yaxes(title_text="Products")
+    return apply_plot_theme(fig)
+
+
+def build_low_margin_products_bar(assignments_branch: pd.DataFrame, count: int = 10) -> go.Figure:
+    low_margin_df = assignments_branch.sort_values("MarginPct", ascending=True).head(count).copy()
+    low_margin_df = low_margin_df.sort_values("MarginPct", ascending=True)
+
+    fig = px.bar(
+        low_margin_df,
+        x="MarginPct",
+        y="Product Desc",
+        color="SuccessTier",
+        orientation="h",
+        color_discrete_map={tier: tier_color(tier) for tier in low_margin_df["SuccessTier"].unique()},
+        hover_data={
+            "Sales": ":,.0f",
+            "Profit": ":,.0f",
+            "Qty": ":,.0f",
+            "Cluster": True,
+            "SuccessTier": False,
+        },
+        title="Lowest 10 Products by Margin",
+    )
+    fig.update_layout(yaxis_title="", xaxis_title="Margin %")
+    fig.update_xaxes(tickformat=".0%")
+    return apply_plot_theme(fig)
+
+
+def build_margin_channel_profile(assignments_branch: pd.DataFrame) -> go.Figure:
+    channel_lookup = {
+        "TakeAwayShare": "Take Away",
+        "TableShare": "Table",
+        "TotersShare": "Toters",
+    }
+    channel_cols = list(channel_lookup.keys())
+    margin_df = assignments_branch.copy()
+    margin_df["DominantChannel"] = margin_df[channel_cols].idxmax(axis=1).map(channel_lookup)
+
+    summary = (
+        margin_df.groupby("DominantChannel", as_index=False)
+        .agg(
+            avg_margin=("MarginPct", "mean"),
+            n_products=("Product Desc", "count"),
+            total_profit=("Profit", "sum"),
+        )
+    )
+    channel_order = ["Take Away", "Table", "Toters"]
+    summary["DominantChannel"] = pd.Categorical(summary["DominantChannel"], categories=channel_order, ordered=True)
+    summary = summary.sort_values("DominantChannel")
+
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig.add_trace(
+        go.Bar(
+            x=summary["DominantChannel"],
+            y=summary["avg_margin"],
+            name="Avg Margin %",
+            marker=dict(color="#0F8A78"),
+            hovertemplate="%{x}<br>Avg Margin: %{y:.1%}<extra></extra>",
+        ),
+        secondary_y=False,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=summary["DominantChannel"],
+            y=summary["n_products"],
+            customdata=summary[["total_profit"]],
+            name="# Products",
+            mode="lines+markers",
+            marker=dict(color="#A25E2A", size=8),
+            line=dict(color="#A25E2A", width=2),
+            hovertemplate="%{x}<br>Products: %{y}<br>Total Profit: %{customdata[0]:,.0f}<extra></extra>",
+        ),
+        secondary_y=True,
+    )
+    fig.update_layout(title="Margin Profile by Dominant Channel")
+    fig.update_xaxes(title_text="")
+    fig.update_yaxes(title_text="Average Margin %", tickformat=".0%", secondary_y=False)
+    fig.update_yaxes(title_text="Products", secondary_y=True)
+    return apply_plot_theme(fig)
+
+
+def build_products_showcase_figure(profiles_branch: pd.DataFrame) -> go.Figure:
+    if profiles_branch.empty:
+        fig = go.Figure()
+        fig.update_layout(title="Most vs Least Successful Tiers")
+        return apply_plot_theme(fig)
+
+    tier_df = profiles_branch.sort_values("SuccessRank").copy()
+    tier_df["TierAxis"] = tier_df["SuccessTier"].map(tier_axis_label)
+    colors = [tier_color(tier) for tier in tier_df["SuccessTier"]]
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=tier_df["TierAxis"],
+            y=tier_df["sales_share"],
+            name="Sales Share",
+            marker=dict(color=colors),
+            text=[format_pct(v) for v in tier_df["sales_share"]],
+            textposition="outside",
+            hovertemplate="%{x}<br>Sales Share: %{y:.1%}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=tier_df["TierAxis"],
+            y=tier_df["profit_share"],
+            name="Profit Share",
+            mode="lines+markers",
+            marker=dict(color="#2E241A", size=9),
+            line=dict(color="#2E241A", width=3),
+            hovertemplate="%{x}<br>Profit Share: %{y:.1%}<extra></extra>",
+        )
+    )
+    fig.update_layout(title="Most vs Least Successful Tiers", bargap=0.30)
+    fig.update_xaxes(title_text="Cluster Tier")
+    fig.update_yaxes(title_text="Share", tickformat=".0%")
     return apply_plot_theme(fig)
 
 
@@ -512,8 +645,9 @@ def build_insights_component(
     if assignments_branch.empty or profiles_branch.empty:
         return html.Div("No insights available.", className="insights-empty")
 
+    _ = k_branch
     best = profiles_branch.sort_values("SuccessRank").iloc[0]
-    selected_k = get_selected_k_row(k_branch)
+    worst = profiles_branch.sort_values("SuccessRank").iloc[-1]
     total_sales = assignments_branch["Sales"].sum()
     total_profit = assignments_branch["Profit"].sum()
     overall_margin = total_profit / total_sales if total_sales > 0 else 0.0
@@ -526,23 +660,38 @@ def build_insights_component(
     }
     dominant_channel = max(channel_means, key=channel_means.get)
     dominant_channel_share = channel_means[dominant_channel]
+    top_product = assignments_branch.sort_values("Sales", ascending=False).iloc[0]
+    least_product = assignments_branch.sort_values("Sales", ascending=True).iloc[0]
+    lowest_margin_product = assignments_branch.sort_values("MarginPct", ascending=True).iloc[0]
 
     insights = [
-        f"Leading tier: {best['SuccessTier']} contributes {format_pct(best['sales_share'])} of sales and "
-        f"{format_pct(best['profit_share'])} of profit.",
-        f"Dominant channel: {dominant_channel} averages {format_pct(dominant_channel_share)} of product sales.",
-        f"Margin watch: {negative_profit_count} products have negative profit, with portfolio margin at {format_pct(overall_margin)}.",
+        f"Best-performing group is {best['SuccessTier']}. It brings {format_pct(best['sales_share'])} of sales.",
+        f"Weakest group is {worst['SuccessTier']}. It contributes {format_pct(worst['sales_share'])} of sales.",
+        f"Most sales come from {dominant_channel} orders ({format_pct(dominant_channel_share)}).",
+        f"Best seller: {top_product['Product Desc']} ({as_currencyish(top_product['Sales'])} sales).",
+        f"Lowest seller: {least_product['Product Desc']} ({as_currencyish(least_product['Sales'])} sales).",
+        f"Overall margin is {format_pct(overall_margin)}. {negative_profit_count} products are losing money.",
+        f"Lowest-margin product is {lowest_margin_product['Product Desc']} ({format_pct(lowest_margin_product['MarginPct'])}).",
     ]
-
-    if selected_k is not None:
-        insights.append(
-            f"Model quality: selected k={int(selected_k['k'])}, silhouette={selected_k['silhouette']:.3f}, "
-            f"smallest cluster ratio={format_pct(selected_k['min_cluster_ratio'])}."
-        )
 
     if branch == ALL_BRANCHES_LABEL:
         branch_count = ASSIGNMENTS_DF[ASSIGNMENTS_DF["Branch"] != ALL_BRANCHES_LABEL]["Branch"].nunique()
         insights.insert(0, f"Combined view across {branch_count} branches and {len(assignments_branch):,} products.")
+        branch_rollup = (
+            ASSIGNMENTS_DF[ASSIGNMENTS_DF["Branch"] != ALL_BRANCHES_LABEL]
+            .groupby("Branch", as_index=False)
+            .agg(Sales=("Sales", "sum"), Profit=("Profit", "sum"))
+        )
+        branch_rollup = branch_rollup[branch_rollup["Sales"] > 0].copy()
+        branch_rollup["MarginPct"] = branch_rollup["Profit"] / branch_rollup["Sales"]
+        if not branch_rollup.empty:
+            best_branch = branch_rollup.sort_values("MarginPct", ascending=False).iloc[0]
+            weakest_branch = branch_rollup.sort_values("MarginPct", ascending=True).iloc[0]
+            insights.insert(
+                1,
+                f"Best branch for margin is {best_branch['Branch']} ({format_pct(best_branch['MarginPct'])}). "
+                f"Weakest branch is {weakest_branch['Branch']} ({format_pct(weakest_branch['MarginPct'])}).",
+            )
 
     return html.Div(
         className="insights-block",
@@ -623,8 +772,11 @@ def answer_query(query: str, branch: str) -> str:
             f"{row['Product Desc']} ({row['MarginPct']:.1%})"
             for _, row in low_margin.iterrows()
         )
+        total_sales = assignments_branch["Sales"].sum()
+        total_profit = assignments_branch["Profit"].sum()
+        overall_margin = total_profit / total_sales if total_sales > 0 else 0.0
         return (
-            f"{branch} overall margin is {format_pct(assignments_branch['Profit'].sum() / assignments_branch['Sales'].sum())}. "
+            f"{branch} overall margin is {format_pct(overall_margin)}. "
             f"Lowest-margin products: {items}."
         )
 
@@ -657,8 +809,8 @@ def build_tab_layout(branch: str, selected_tab: str) -> html.Div:
         return html.Div(
             className="grid-two",
             children=[
-                dcc.Graph(figure=build_scatter_figure(assignments_branch), config={"displayModeBar": False}),
-                dcc.Graph(figure=build_cluster_mix_figure(profiles_branch), config={"displayModeBar": False}),
+                graph_component(build_scatter_figure(assignments_branch), height=520),
+                graph_component(build_cluster_mix_figure(profiles_branch), height=520),
             ],
         )
 
@@ -666,57 +818,146 @@ def build_tab_layout(branch: str, selected_tab: str) -> html.Div:
         return html.Div(
             className="grid-two",
             children=[
-                dcc.Graph(figure=build_channel_heatmap(profiles_branch), config={"displayModeBar": False}),
-                dcc.Graph(figure=build_cluster_mix_figure(profiles_branch), config={"displayModeBar": False}),
+                graph_component(build_channel_heatmap(profiles_branch), height=500),
+                graph_component(build_cluster_mix_figure(profiles_branch), height=500),
             ],
         )
 
     if selected_tab == "diagnostics":
         return html.Div(
             className="grid-one",
-            children=[dcc.Graph(figure=build_k_quality_figure(k_branch), config={"displayModeBar": False})],
+            children=[graph_component(build_k_quality_figure(k_branch), height=520)],
         )
 
     if selected_tab == "products":
-        top_table = (
-            assignments_branch.sort_values("Sales", ascending=False)
-            .head(15)[["Product Desc", "SuccessTier", "Cluster", "Sales", "Profit", "MarginPct", "Qty"]]
+        table_header_style = {
+            "backgroundColor": "#EFDCC0",
+            "color": "#2E241A",
+            "fontWeight": "700",
+            "border": "none",
+        }
+        table_cell_style = {
+            "backgroundColor": "rgba(255,255,255,0.72)",
+            "color": "#2E241A",
+            "padding": "10px 12px",
+            "border": "none",
+            "fontFamily": "'Manrope', 'Segoe UI', sans-serif",
+            "fontSize": "13px",
+            "textAlign": "left",
+        }
+
+        if assignments_branch.empty:
+            top_tier_assignments = assignments_branch.copy()
+            least_success_assignments = assignments_branch.copy()
+        else:
+            top_rank = int(assignments_branch["SuccessRank"].min())
+            top_tier_assignments = assignments_branch[assignments_branch["SuccessRank"] == top_rank].copy()
+            worst_rank = int(assignments_branch["SuccessRank"].max())
+            least_success_assignments = assignments_branch[assignments_branch["SuccessRank"] == worst_rank].copy()
+
+        top_tier_table = (
+            top_tier_assignments.sort_values("Sales", ascending=False)
+            .head(10)[["Product Desc", "SuccessTier", "Cluster", "Sales", "Profit", "MarginPct", "Qty"]]
             .copy()
         )
-        top_table["Sales"] = top_table["Sales"].map(lambda v: f"{v:,.0f}")
-        top_table["Profit"] = top_table["Profit"].map(lambda v: f"{v:,.0f}")
-        top_table["MarginPct"] = top_table["MarginPct"].map(lambda v: f"{v:.1%}")
-        top_table["Qty"] = top_table["Qty"].map(lambda v: f"{v:,.0f}")
+
+        least_success_table = (
+            least_success_assignments.sort_values(["Sales", "Profit"], ascending=[True, True])
+            .head(10)[["Product Desc", "SuccessTier", "Cluster", "Sales", "Profit", "MarginPct", "Qty"]]
+            .copy()
+        )
+
+        top_sales_table = (
+            assignments_branch.sort_values("Sales", ascending=False)
+            .head(10)[["Product Desc", "SuccessTier", "Cluster", "Sales", "Profit", "MarginPct", "Qty"]]
+            .copy()
+        )
+
+        bottom_sales_table = (
+            assignments_branch.sort_values("Sales", ascending=True)
+            .head(10)[["Product Desc", "SuccessTier", "Cluster", "Sales", "Profit", "MarginPct", "Qty"]]
+            .copy()
+        )
+
+        for table_df in [top_tier_table, least_success_table, top_sales_table, bottom_sales_table]:
+            if "Sales" in table_df.columns:
+                table_df["Sales"] = table_df["Sales"].map(lambda v: f"{v:,.0f}")
+            if "Profit" in table_df.columns:
+                table_df["Profit"] = table_df["Profit"].map(lambda v: f"{v:,.0f}")
+            table_df["MarginPct"] = table_df["MarginPct"].map(lambda v: f"{v:.1%}")
+            table_df["Qty"] = table_df["Qty"].map(lambda v: f"{v:,.0f}")
 
         return html.Div(
-            className="grid-two",
+            className="products-stack",
             children=[
-                dcc.Graph(figure=build_top_products_bar(assignments_branch), config={"displayModeBar": False}),
                 html.Div(
-                    className="table-wrap",
+                    className="grid-one",
+                    children=[graph_component(build_products_showcase_figure(profiles_branch), height=520)],
+                ),
+                html.Div(
+                    className="grid-two",
                     children=[
-                        html.H4("Top 15 Products", className="table-title"),
-                        dash_table.DataTable(
-                            data=top_table.to_dict("records"),
-                            columns=[{"name": c, "id": c} for c in top_table.columns],
-                            page_size=15,
-                            style_table={"overflowX": "auto"},
-                            style_header={
-                                "backgroundColor": "#EFDCC0",
-                                "color": "#2E241A",
-                                "fontWeight": "700",
-                                "border": "none",
-                            },
-                            style_cell={
-                                "backgroundColor": "rgba(255,255,255,0.72)",
-                                "color": "#2E241A",
-                                "padding": "10px 12px",
-                                "border": "none",
-                                "fontFamily": "'Manrope', 'Segoe UI', sans-serif",
-                                "fontSize": "13px",
-                                "textAlign": "left",
-                            },
+                        html.Div(
+                            className="table-wrap",
+                            children=[
+                                html.H4("Top 10 Products in Best Tier", className="table-title"),
+                                dash_table.DataTable(
+                                    data=top_tier_table.to_dict("records"),
+                                    columns=[{"name": c, "id": c} for c in top_tier_table.columns],
+                                    page_size=10,
+                                    style_table={"overflowX": "auto"},
+                                    style_header=table_header_style,
+                                    style_cell=table_cell_style,
+                                ),
+                            ],
                         ),
+                        html.Div(
+                            className="table-wrap",
+                            children=[
+                                html.H4("Least 10 Successful Products", className="table-title"),
+                                dash_table.DataTable(
+                                    data=least_success_table.to_dict("records"),
+                                    columns=[{"name": c, "id": c} for c in least_success_table.columns],
+                                    page_size=10,
+                                    style_table={"overflowX": "auto"},
+                                    style_header=table_header_style,
+                                    style_cell=table_cell_style,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                html.Div(
+                    className="grid-two",
+                    children=[
+                        html.Div(
+                            className="table-wrap",
+                            children=[
+                                html.H4("Top 10 Products by Sales", className="table-title"),
+                                dash_table.DataTable(
+                                    data=top_sales_table.to_dict("records"),
+                                    columns=[{"name": c, "id": c} for c in top_sales_table.columns],
+                                    page_size=10,
+                                    style_table={"overflowX": "auto"},
+                                    style_header=table_header_style,
+                                    style_cell=table_cell_style,
+                                ),
+                            ],
+                        ),
+                        html.Div(
+                            className="table-wrap",
+                            children=[
+                                html.H4("Bottom 10 Products by Sales", className="table-title"),
+                                dash_table.DataTable(
+                                    data=bottom_sales_table.to_dict("records"),
+                                    columns=[{"name": c, "id": c} for c in bottom_sales_table.columns],
+                                    page_size=10,
+                                    style_table={"overflowX": "auto"},
+                                    style_header=table_header_style,
+                                    style_cell=table_cell_style,
+                                ),
+                            ],
+                        )
                     ],
                 ),
             ],
@@ -725,16 +966,17 @@ def build_tab_layout(branch: str, selected_tab: str) -> html.Div:
     return html.Div(
         className="grid-two",
         children=[
-            dcc.Graph(figure=build_scatter_figure(assignments_branch), config={"displayModeBar": False}),
-            dcc.Graph(figure=build_channel_heatmap(profiles_branch), config={"displayModeBar": False}),
+            graph_component(build_scatter_figure(assignments_branch)),
+            graph_component(build_channel_heatmap(profiles_branch)),
         ],
     )
 
 
 assert_required_files()
 ASSIGNMENTS_DF, PROFILES_DF, K_SCORES_DF = load_data()
-BRANCHES = sorted(PROFILES_DF["Branch"].unique().tolist())
-DEFAULT_BRANCH = BRANCHES[0]
+_raw_branches = sorted({branch.strip() for branch in PROFILES_DF["Branch"].astype(str).tolist() if branch.strip()})
+BRANCHES = [ALL_BRANCHES_LABEL] + [branch for branch in _raw_branches if branch != ALL_BRANCHES_LABEL]
+DEFAULT_BRANCH = ALL_BRANCHES_LABEL
 
 
 app = Dash(__name__, title="Stories Coffee | Branch Intelligence")
@@ -790,6 +1032,7 @@ app.layout = html.Div(
                             ],
                         ),
                         html.Div(id="kpi-grid", className="kpi-grid"),
+                        html.Div(id="insights-panel", className="insights-panel"),
                     ],
                 ),
                 html.Section(
@@ -799,10 +1042,10 @@ app.layout = html.Div(
                             id="plot-tabs",
                             value="performance",
                             children=[
-                                dcc.Tab(label="Performance Map", value="performance", className="plot-tab", selected_className="plot-tab--selected"),
-                                dcc.Tab(label="Channel Mix", value="channels", className="plot-tab", selected_className="plot-tab--selected"),
-                                dcc.Tab(label="Model Diagnostics", value="diagnostics", className="plot-tab", selected_className="plot-tab--selected"),
-                                dcc.Tab(label="Top Products", value="products", className="plot-tab", selected_className="plot-tab--selected"),
+                                dcc.Tab(label="Performance", value="performance", className="plot-tab", selected_className="plot-tab--selected"),
+                                dcc.Tab(label="Channels", value="channels", className="plot-tab", selected_className="plot-tab--selected"),
+                                dcc.Tab(label="Diagnostics", value="diagnostics", className="plot-tab", selected_className="plot-tab--selected"),
+                                dcc.Tab(label="Products + Margin", value="products", className="plot-tab", selected_className="plot-tab--selected"),
                             ],
                         ),
                         html.Div(id="tab-content", className="tab-content"),
@@ -848,6 +1091,10 @@ def update_kpis(branch: str) -> list[html.Div]:
     assignments_branch = get_branch_slice(ASSIGNMENTS_DF, branch)
     profiles_branch = get_branch_slice(PROFILES_DF, branch).sort_values("SuccessRank")
     k_branch = get_branch_slice(K_SCORES_DF, branch)
+
+    if assignments_branch.empty or profiles_branch.empty:
+        return [metric_card("No Data", "-", "No records for selected branch.")]
+
     selected_k = get_selected_k_row(k_branch)
 
     total_sales = assignments_branch["Sales"].sum()
@@ -870,6 +1117,14 @@ def update_kpis(branch: str) -> list[html.Div]:
         metric_card("Selected k", k_text, sil_text),
         metric_card("Top-Tier Sales Share", format_pct(top_tier_share), "Contribution of best-performing tier"),
     ]
+
+
+@callback(Output("insights-panel", "children"), Input("branch-dropdown", "value"))
+def update_insights(branch: str) -> html.Div:
+    assignments_branch = get_branch_slice(ASSIGNMENTS_DF, branch)
+    profiles_branch = get_branch_slice(PROFILES_DF, branch).sort_values("SuccessRank")
+    k_branch = get_branch_slice(K_SCORES_DF, branch)
+    return build_insights_component(branch, assignments_branch, profiles_branch, k_branch)
 
 
 @callback(

@@ -129,6 +129,31 @@ body {
   gap: 10px;
 }
 
+.insights-panel {
+  margin-top: 2px;
+}
+
+.insights-block {
+  background: rgba(255, 247, 234, 0.74);
+  border: 1px solid rgba(123, 94, 66, 0.2);
+  border-radius: 14px;
+  padding: 10px 14px;
+}
+
+.insights-title {
+  margin: 0 0 6px;
+  font-family: "Sora", "Avenir Next", sans-serif;
+  font-size: 0.95rem;
+}
+
+.insights-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #5e4a37;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .metric-card {
   background: linear-gradient(155deg, rgba(255, 246, 232, 0.93), rgba(252, 234, 204, 0.78));
   border: 1px solid rgba(178, 146, 112, 0.35);
@@ -168,12 +193,35 @@ body {
 .grid-two {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 16px;
+  align-items: stretch;
 }
 
 .grid-one {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+}
+
+.products-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.chart-frame {
+  border-radius: 14px;
+  border: 1px solid rgba(123, 94, 66, 0.17);
+  background: rgba(255, 255, 255, 0.48);
+  overflow: hidden;
+  min-height: 420px;
+  position: relative;
+}
+
+.chart-frame .dash-graph {
+  width: 100%;
+}
+
+.chart-frame .js-plotly-plot {
+  width: 100% !important;
 }
 
 .table-wrap {
@@ -192,8 +240,10 @@ body {
   border: 1px solid transparent !important;
   border-radius: 12px !important;
   margin-right: 6px;
+  padding: 10px 12px !important;
   background: rgba(255, 255, 255, 0.36) !important;
   color: #6f5b47 !important;
+  font-size: 13px !important;
   font-weight: 700;
   transition: 0.22s ease;
 }
@@ -361,6 +411,12 @@ body {
   }
 
   .grid-two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 1260px) {
+  .visual-card .grid-two {
     grid-template-columns: minmax(0, 1fr);
   }
 }
