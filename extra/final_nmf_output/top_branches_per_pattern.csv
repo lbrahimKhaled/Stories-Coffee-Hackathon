@@ -1,0 +1,31 @@
+Pattern,Rank,Branch,Weight
+Pattern_0,1,Stories LAU,0.2720994655307798
+Pattern_0,2,Stories Le Mall,0.25329686324826217
+Pattern_0,3,Stories Verdun,0.24472102008354524
+Pattern_0,4,Stories Antelias,0.23952114761746857
+Pattern_0,5,Stories Faqra,0.23372241925229048
+Pattern_1,1,Stories Event Starco,0.37746998104147006
+Pattern_1,2,Stories raouche,0.2551256725541796
+Pattern_1,3,Stories amioun,0.20129584664444186
+Pattern_1,4,Stories Ain El Mreisseh,0.1457486629402053
+Pattern_1,5,Stories sin el fil,0.14409003479295854
+Pattern_2,1,Stories Airport,0.17168129648510658
+Pattern_2,2,Stories.,0.14385396438550999
+Pattern_2,3,Stories Centro Mall,0.13604243560026494
+Pattern_2,4,Stories Sour 2,0.1251160537479185
+Pattern_2,5,Stories alay,0.10784185068610053
+Pattern_3,1,Stories sin el fil,0.11843914497713995
+Pattern_3,2,Stories amioun,0.09916099574886138
+Pattern_3,3,Stories jbeil,0.0897436157503279
+Pattern_3,4,Stories Mansourieh,0.08913802815148034
+Pattern_3,5,Stories Zalka,0.08802850309534817
+Pattern_4,1,Stories Faqra,0.18436173227439798
+Pattern_4,2,Stories Verdun,0.15522683222102587
+Pattern_4,3,Stories Khaldeh,0.14449325358093543
+Pattern_4,4,Stories - Bir Hasan,0.13275721986438072
+Pattern_4,5,Stories raouche,0.12620353029922798
+Pattern_5,1,Stories Event Starco,0.1461564680197776
+Pattern_5,2,Stories Bayada,0.11730475157075512
+Pattern_5,3,Stories Batroun,0.10617892105938988
+Pattern_5,4,Stories Zalka,0.09432655184510225
+Pattern_5,5,Stories Faqra,0.0930880310356391

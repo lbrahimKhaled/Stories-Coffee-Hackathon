@@ -90,9 +90,7 @@ opening_df = opening_df.dropna()
 
 print("Branches after cleaning:", len(opening_df))
 
-# =====================================================
-# CLUSTERING
-# =====================================================
+
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(opening_df)
 
@@ -101,25 +99,17 @@ clusters = kmeans.fit_predict(X_scaled)
 
 opening_df["cluster"] = clusters
 
-# =====================================================
-# CLUSTER SUMMARY
-# =====================================================
 print("\nCluster Summary (Mean Values):")
 print(opening_df.groupby("cluster").mean())
 import matplotlib.pyplot as plt
 
-# =====================================================
-# PLOT AVERAGE OPENING TRAJECTORY PER CLUSTER
-# =====================================================
-
-# Rebuild trajectories per branch
 cluster_trajectories = {0: [], 1: [], 2: []}
 
 for i in range(len(df)):
     
     series = df.iloc[i].values
     
-    # Count initial zeros
+
     initial_zeros = 0
     for value in series:
         if value == 0:
@@ -137,11 +127,10 @@ for i in range(len(df)):
     
     if np.any(first6 == 0):
         continue
-    
-    # Normalize trajectory by first month (to compare shapes)
+ 
     first6_norm = first6 / first6[0]
     
-    # Assign cluster (match by feature row index)
+
     if len(cluster_trajectories[0]) + len(cluster_trajectories[1]) + len(cluster_trajectories[2]) < len(opening_df):
         cluster_id = opening_df.iloc[
             len(cluster_trajectories[0]) + len(cluster_trajectories[1]) + len(cluster_trajectories[2])

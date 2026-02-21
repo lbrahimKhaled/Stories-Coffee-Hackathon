@@ -1,0 +1,10 @@
+From the NMF unsupervised analysis on the branch revenue-share data,
+ we extracted a small number of latent consumption archetypes and measured how strongly 
+ each branch aligns with them. The results show that most branches share a very similar
+revenue structure dominated by mixed cold beverages, mixed hot beverages, blended drinks,
+and frozen yogurt, meaning the network is largely homogeneous in product mix. 
+The dominant-pattern distribution is highly imbalanced (most branches fall into one main pattern),
+However, a few branches—most notably Event Starco and the Airport—stand out as structurally different,
+with stronger pattern dominance and lower entropy, making them true behavioral outliers.
+In summary we can say tyat the data  consumption patterns across locations are broadly consistent,
+ with only a small number of distinct branch types emerging from the unsupervised segmentation.
