@@ -6,8 +6,3 @@ dash
 scikit-learn
 scipy
 seaborn
-openai
-sqlite3
-os
-csv
-json
